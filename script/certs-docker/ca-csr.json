@@ -1,0 +1,17 @@
+{
+    "CN": "docker.event",
+    "key": {
+      "algo": "rsa",
+      "size": 2048
+    },
+    "names": [
+      {
+        "C": "Australia",
+        "L": "Melbourne",
+        "O": "Open Source",
+        "OU": "IT Department",
+        "ST": "VIC"
+      }
+    ]
+  }
+  

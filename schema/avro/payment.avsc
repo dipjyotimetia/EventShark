@@ -1,0 +1,40 @@
+{
+  "type": "record",
+  "namespace": "com.payment",
+  "name": "Payment",
+  "fields": [
+    {
+      "name": "transaction_id",
+      "type": "string"
+    },
+    {
+      "name": "user_id",
+      "type": "string"
+    },
+    {
+      "name": "amount",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "string"
+    },
+    {
+      "name": "payment_method",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis"
+    },
+    {
+      "name": "status",
+      "type": {
+        "name": "Status",
+        "type": "enum",
+        "symbols" : ["INITIATED", "PROCESSED", "COMPLETED", "FAILED"]
+      }
+    }
+  ]
+}

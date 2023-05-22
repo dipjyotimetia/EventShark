@@ -1,0 +1,56 @@
+{
+    "type": "record",
+    "namespace": "com.order",
+    "name": "Order",
+    "fields": [
+      {
+        "name": "order_id",
+        "type": "string"
+      },
+      {
+        "name": "customer_id",
+        "type": "string"
+      },
+      {
+        "name": "order_date",
+        "type": "string"
+      },
+      {
+        "name": "items",
+        "type": {
+          "type": "array",
+          "items": {
+            "type": "record",
+            "name": "OrderItem",
+            "fields": [
+              {
+                "name": "product_id",
+                "type": "string"
+              },
+              {
+                "name": "product_name",
+                "type": "string"
+              },
+              {
+                "name": "quantity",
+                "type": "int"
+              },
+              {
+                "name": "price",
+                "type": "double"
+              }
+            ]
+          }
+        }
+      },
+      {
+        "name": "shipping_address",
+        "type": "string"
+      },
+      {
+        "name": "payment_method",
+        "type": "string"
+      }
+    ]
+  }
+  

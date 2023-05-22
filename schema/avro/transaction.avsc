@@ -1,0 +1,68 @@
+{
+  "type": "record",
+  "namespace": "com.payment",
+  "name": "PaymentTransaction",
+  "fields": [
+    {
+      "name": "transaction_id",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": {
+        "type": "long",
+        "logicalType": "timestamp-millis"
+      }
+    },
+    {
+      "name": "payer",
+      "type": {
+        "type": "record",
+        "name": "Payer",
+        "fields": [
+          {
+            "name": "payer_id",
+            "type": "string"
+          },
+          {
+            "name": "payer_name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "payee",
+      "type": {
+        "type": "record",
+        "name": "Payee",
+        "fields": [
+          {
+            "name": "payee_id",
+            "type": "string"
+          },
+          {
+            "name": "payee_name",
+            "type": "string"
+          }
+        ]
+      }
+    },
+    {
+      "name": "amount",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": {
+        "name": "TransactionStatus",
+        "type": "enum",
+        "symbols": ["INITIATED", "PENDING", "COMPLETED", "FAILED"]
+      }
+    }
+  ]
+}

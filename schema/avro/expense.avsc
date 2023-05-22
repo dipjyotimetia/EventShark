@@ -1,0 +1,42 @@
+{
+  "type": "record",
+  "namespace": "com.expense",
+  "name": "Expense",
+  "fields": [
+    {
+      "name": "expense_id",
+      "type": "string"
+    },
+    {
+      "name": "user_id",
+      "type": "string"
+    },
+    {
+      "name": "category",
+      "type": "string"
+    },
+    {
+      "name": "amount",
+      "type": "double"
+    },
+    {
+      "name": "currency",
+      "type": "string"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "logicalType": "timestamp-millis"
+    },
+    {
+      "name": "description",
+      "type": ["null", "string"],
+      "default": null
+    },
+    {
+      "name": "receipt",
+      "type": ["null", "string"],
+      "default": null
+    }
+  ]
+}
