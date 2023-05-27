@@ -3,13 +3,13 @@ module github.com/dipjyotimetia/event-stream
 go 1.20
 
 require (
+	github.com/caarlos0/env/v8 v8.0.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/hamba/avro/v2 v2.8.1
 	github.com/heetch/avro v0.4.4
-	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/linkedin/goavro/v2 v2.12.0
 	github.com/twmb/franz-go v1.13.4
-	github.com/twmb/franz-go/pkg/sr v0.0.0-20230518145326-4ec11aead75b
+	github.com/twmb/franz-go/pkg/sr v0.0.0-20230524041124-8406043eb1a3
 )
 
 require (

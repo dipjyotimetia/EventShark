@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Install curl
 apt-get update && apt-get install -y curl

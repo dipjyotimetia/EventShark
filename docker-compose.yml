@@ -1,42 +1,47 @@
 version: '3.8'
 services:
-
-  service:
+  event-stream:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: event-stream
     ports:
-      - "8080:8080"
+      - "9050:9050"
     networks:
       - kafka_network
     depends_on:
       - init-topic
     environment:
-      KAFKA_BROKERS: kafka:9092
-      KAFKA_TOPICS: expense-topic
-      KAFKA_SCHEMAREGISTRY: kafka:8081
+      BROKERS: kafka:9092
+      TOPICS: expense-topic
+      SCHEMAREGISTRY: kafka:8081
 
   kafka:
     image: docker.vectorized.io/vectorized/redpanda:latest
     container_name: kafka
     command:
-      - redpanda start
-      - --smp 1
+      - redpanda
+      - start
+      - --smp
+      - "1"
       - --overprovisioned
-      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
-      - --advertise-kafka-addr PLAINTEXT://kafka:29092,OUTSIDE://localhost:9092
-      - --pandaproxy-addr 0.0.0.0:8082
-      - --advertise-pandaproxy-addr localhost:8082
+      - --kafka-addr
+      - "PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092"
+      - --advertise-kafka-addr
+      - "PLAINTEXT://kafka:29092,OUTSIDE://localhost:9092"
+      - --pandaproxy-addr
+      - "0.0.0.0:8082"
+      - --advertise-pandaproxy-addr
+      - "localhost:8082"
     ports:
       - "8081:8081"
       - "8082:8082"
       - "9092:9092"
       - "29092:29092"
     environment:
-      - REDPANDA_AUTO_CREATE_TOPICS_ENABLED=true
-      - REDPANDA_DEFAULT_REPLICATION_FACTOR=1
-      - REDPANDA_LOG_LEVEL=info
+      REDPANDA_AUTO_CREATE_TOPICS_ENABLED: "true"
+      REDPANDA_DEFAULT_REPLICATION_FACTOR: "1"
+      REDPANDA_LOG_LEVEL: "info"
     networks:
       - kafka_network
 
@@ -52,7 +57,7 @@ services:
   console:
     image: docker.redpanda.com/redpandadata/console:latest
     entrypoint: /bin/sh
-    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml && /app/console"
     container_name: console
     environment:
       CONFIG_FILEPATH: /tmp/config.yml

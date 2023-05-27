@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/dipjyotimetia/event-stream/gen/expense"
 	"github.com/dipjyotimetia/event-stream/pkg/config"
@@ -21,7 +20,7 @@ type Produce interface {
 }
 
 func NewKafkaClient(cfg *config.Config) KafkaClient {
-	seeds := []string{"localhost:9092"}
+	seeds := []string{cfg.Brokers}
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
 		kgo.DefaultProduceTopic("expense-topic"),
@@ -46,7 +45,7 @@ func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) {
 }
 
 func getSchema(cfg config.Config, subject string) sr.SubjectSchema {
-	rcl, err := sr.NewClient(sr.URLs("localhost:8081"))
+	rcl, err := sr.NewClient(sr.URLs(cfg.SchemaRegistry))
 	if err != nil {
 		_ = fmt.Errorf("unable to create schema registry client")
 	}
@@ -57,12 +56,13 @@ func getSchema(cfg config.Config, subject string) sr.SubjectSchema {
 	return schemaSubject
 }
 
-func (c KafkaClient) SetExpenseRecord(cfg config.Config, ts any) *kgo.Record {
-	schemaSubject := getSchema(cfg, "expense-topic-value")
+func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts any) *kgo.Record {
+	schemaSubject := getSchema(*cfg, "expense-topic-value")
 	avroSchema, err := avro.Parse(schemaSubject.Schema.Schema)
 	if err != nil {
 		_ = fmt.Errorf("unable to parse avro schema")
 	}
+
 	var serde sr.Serde
 	serde.Register(
 		schemaSubject.ID,
@@ -81,41 +81,6 @@ func (c KafkaClient) SetExpenseRecord(cfg config.Config, ts any) *kgo.Record {
 	return &record
 }
 
-func StringPtr(val string) *string {
+func Ptr[T any](val T) *T {
 	return &val
-}
-
-func (c KafkaClient) SetExpenseRecordAvro(cfg *config.Config) *kgo.Record {
-	schemaSubject := getSchema(*cfg, "expense-topic-value")
-	avroSchema, err := avro.Parse(schemaSubject.Schema.Schema)
-	if err != nil {
-		_ = fmt.Errorf("unable to parse avro schema")
-	}
-
-	tt := expense.Expense{
-		Expense_id:  "1234",
-		User_id:     "1234",
-		Category:    "1234",
-		Amount:      12,
-		Currency:    "AUD",
-		Timestamp:   time.Now().UnixMilli(),
-		Description: StringPtr("TestNew"),
-		Receipt:     StringPtr("TestNew"),
-	}
-
-	var serde sr.Serde
-	serde.Register(
-		schemaSubject.ID,
-		expense.Expense{},
-		sr.EncodeFn(func(v any) ([]byte, error) {
-			return avro.Marshal(avroSchema, v)
-		}),
-		sr.DecodeFn(func(b []byte, v any) error {
-			return avro.Unmarshal(avroSchema, b, v)
-		}),
-	)
-	record := kgo.Record{
-		Value: serde.MustEncode(tt),
-	}
-	return &record
 }

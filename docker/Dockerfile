@@ -6,6 +6,8 @@ COPY schema/expense.json /expense.json
 COPY schema/payment.json /payment.json
 COPY schema/transaction.json /transaction.json
 
+WORKDIR /
+
 USER root
 RUN chown root:root /create_topics.sh
 # Make scripts executable
