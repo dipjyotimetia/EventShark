@@ -1,3 +1,5 @@
+// Package events provides functionality for producing messages to Kafka topics.
+
 package events
 
 import (
@@ -11,14 +13,18 @@ import (
 	"github.com/twmb/franz-go/pkg/sr"
 )
 
+// KafkaClient wraps a kgo.Client to provide Kafka producer functionality.
 type KafkaClient struct {
 	*kgo.Client
 }
 
+// Produce defines the interface for producing messages to Kafka.
 type Produce interface {
 	Producer(ctx context.Context, record *kgo.Record)
 }
 
+// NewKafkaClient creates a new KafkaClient based on the provided configuration.
+// It initializes a Kafka producer client and returns a KafkaClient instance.
 func NewKafkaClient(cfg *config.Config) KafkaClient {
 	seeds := []string{cfg.Brokers}
 	client, err := kgo.NewClient(
@@ -32,6 +38,7 @@ func NewKafkaClient(cfg *config.Config) KafkaClient {
 	return KafkaClient{client}
 }
 
+// Producer sends a Kafka record synchronously and prints the result.
 func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) {
 	results := c.Client.ProduceSync(ctx, record)
 	for _, pr := range results {
@@ -44,6 +51,7 @@ func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) {
 	}
 }
 
+// getSchema retrieves the Avro schema for the specified subject from the schema registry.
 func getSchema(cfg config.Config, subject string) sr.SubjectSchema {
 	rcl, err := sr.NewClient(sr.URLs(cfg.SchemaRegistry))
 	if err != nil {
@@ -56,7 +64,8 @@ func getSchema(cfg config.Config, subject string) sr.SubjectSchema {
 	return schemaSubject
 }
 
-func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts any) *kgo.Record {
+// SetExpenseRecord encodes the provided data using Avro and creates a Kafka record with the encoded value.
+func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts interface{}) *kgo.Record {
 	schemaSubject := getSchema(*cfg, "expense-topic-value")
 	avroSchema, err := avro.Parse(schemaSubject.Schema.Schema)
 	if err != nil {
@@ -67,10 +76,10 @@ func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts any) *kgo.Record {
 	serde.Register(
 		schemaSubject.ID,
 		expense.Expense{},
-		sr.EncodeFn(func(v any) ([]byte, error) {
+		sr.EncodeFn(func(v interface{}) ([]byte, error) {
 			return avro.Marshal(avroSchema, v)
 		}),
-		sr.DecodeFn(func(b []byte, v any) error {
+		sr.DecodeFn(func(b []byte, v interface{}) error {
 			return avro.Unmarshal(avroSchema, b, v)
 		}),
 	)
@@ -81,6 +90,7 @@ func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts any) *kgo.Record {
 	return &record
 }
 
+// Ptr returns a pointer to the provided value.
 func Ptr[T any](val T) *T {
 	return &val
 }
