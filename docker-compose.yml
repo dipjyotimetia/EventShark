@@ -7,8 +7,6 @@ services:
     container_name: event-stream
     ports:
       - "9050:9050"
-    networks:
-      - kafka_network
     depends_on:
       - init-topic
     environment:
@@ -42,15 +40,11 @@ services:
       REDPANDA_AUTO_CREATE_TOPICS_ENABLED: "true"
       REDPANDA_DEFAULT_REPLICATION_FACTOR: "1"
       REDPANDA_LOG_LEVEL: "info"
-    networks:
-      - kafka_network
 
   init-topic:
     build:
       context: ./docker
       dockerfile: Dockerfile
-    networks:
-      - kafka_network
     depends_on:
       - kafka
 
@@ -71,9 +65,3 @@ services:
       - "8086:8080"
     depends_on:
       - kafka
-    networks:
-      - kafka_network
-
-networks:
-  kafka_network:
-    driver: bridge

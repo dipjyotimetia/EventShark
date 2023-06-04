@@ -12,12 +12,20 @@ import (
 	"github.com/dipjyotimetia/event-stream/pkg/config"
 	"github.com/dipjyotimetia/event-stream/pkg/events"
 	"github.com/dipjyotimetia/event-stream/pkg/router"
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 	// The HTTP Server
-	server := &http.Server{Addr: ":9050", Handler: service()}
+	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
+	logger.Println("Server is starting...")
+	server := &http.Server{Addr: ":9050", Handler: service(),
+		WriteTimeout: 5 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		IdleTimeout:  15 * time.Second,
+		ErrorLog:     logger,
+	}
 
 	// Server run context
 	serverCtx, serverStopCtx := context.WithCancel(context.Background())
@@ -60,10 +68,8 @@ func main() {
 func service() http.Handler {
 	r := chi.NewRouter()
 
-	// r.Use(middleware.RequestID)
-	// r.Use(middleware.RealIP)
-	// r.Use(middleware.Logger)
-	// r.Use(middleware.Recoverer)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
 
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -72,8 +78,8 @@ func service() http.Handler {
 
 	cc := events.NewKafkaClient(cfg)
 
-	r.Get("/ping", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("pong"))
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("healthy"))
 	})
 
 	r.Post("/expense", router.ExpenseRouter(cc, cfg))

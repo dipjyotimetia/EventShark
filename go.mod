@@ -4,12 +4,13 @@ go 1.20
 
 require (
 	github.com/caarlos0/env/v8 v8.0.0
+	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/chi/v5 v5.0.8
-	github.com/hamba/avro/v2 v2.8.1
+	github.com/hamba/avro/v2 v2.9.0
 	github.com/heetch/avro v0.4.4
 	github.com/linkedin/goavro/v2 v2.12.0
-	github.com/twmb/franz-go v1.13.4
-	github.com/twmb/franz-go/pkg/sr v0.0.0-20230524041124-8406043eb1a3
+	github.com/twmb/franz-go v1.13.5
+	github.com/twmb/franz-go/pkg/sr v0.0.0-20230601152920-18e3c132ada0
 )
 
 require (

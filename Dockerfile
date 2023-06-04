@@ -22,4 +22,6 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 
 COPY --from=builder /app/server /app/server
 
+EXPOSE 9050
+
 ENTRYPOINT ["/app/server"]
