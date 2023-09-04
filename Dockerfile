@@ -1,4 +1,4 @@
-FROM golang:1.21-buster as builder
+FROM golang:1.21-bullseye as builder
 
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
