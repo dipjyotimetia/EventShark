@@ -6,11 +6,11 @@ require (
 	github.com/caarlos0/env/v8 v8.0.0
 	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/chi/v5 v5.0.10
-	github.com/hamba/avro/v2 v2.14.0
+	github.com/hamba/avro/v2 v2.15.0
 	github.com/heetch/avro v0.4.4
 	github.com/linkedin/goavro/v2 v2.12.0
-	github.com/twmb/franz-go v1.14.3
-	github.com/twmb/franz-go/pkg/sr v0.0.0-20230804141320-83cb9fe23c6c
+	github.com/twmb/franz-go v1.14.4
+	github.com/twmb/franz-go/pkg/sr v0.0.0-20230831143058-4ad9ea5b0dba
 )
 
 require (

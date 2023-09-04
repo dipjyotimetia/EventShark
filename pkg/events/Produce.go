@@ -57,7 +57,7 @@ func getSchema(cfg config.Config, subject string) sr.SubjectSchema {
 	if err != nil {
 		_ = fmt.Errorf("unable to create schema registry client")
 	}
-	schemaSubject, err := rcl.SchemaByVersion(context.Background(), subject, -1, false)
+	schemaSubject, err := rcl.SchemaByVersion(context.Background(), subject, -1)
 	if err != nil {
 		_ = fmt.Errorf("unable to get schema registry client")
 	}
