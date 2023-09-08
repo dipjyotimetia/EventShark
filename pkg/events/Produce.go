@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dipjyotimetia/event-stream/gen/expense"
+	"github.com/dipjyotimetia/event-stream/gen"
 	"github.com/dipjyotimetia/event-stream/pkg/config"
 	"github.com/hamba/avro/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -25,7 +25,7 @@ type Produce interface {
 
 // NewKafkaClient creates a new KafkaClient based on the provided configuration.
 // It initializes a Kafka producer client and returns a KafkaClient instance.
-func NewKafkaClient(cfg *config.Config) KafkaClient {
+func NewKafkaClient(cfg *config.Config) *KafkaClient {
 	seeds := []string{cfg.Brokers}
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
@@ -33,22 +33,23 @@ func NewKafkaClient(cfg *config.Config) KafkaClient {
 	)
 	if err != nil {
 		fmt.Printf("error initializing Kafka producer client: %v\n", err)
-		return KafkaClient{}
+		return &KafkaClient{}
 	}
-	return KafkaClient{client}
+	return &KafkaClient{client}
 }
 
 // Producer sends a Kafka record synchronously and prints the result.
-func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) {
+func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) error {
 	results := c.Client.ProduceSync(ctx, record)
 	for _, pr := range results {
 		if pr.Err != nil {
-			fmt.Printf("Error sending synchronous message: %v \n", pr.Err)
+			return fmt.Errorf("Error sending synchronous message: %v \n", pr.Err)
 		} else {
 			fmt.Printf("Message sent: topic: %s, offset: %d, partition: %d \n",
 				pr.Record.Topic, pr.Record.Offset, pr.Record.Partition)
 		}
 	}
+	return nil
 }
 
 // getSchema retrieves the Avro schema for the specified subject from the schema registry.
@@ -75,7 +76,7 @@ func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts interface{}) *kgo.R
 	var serde sr.Serde
 	serde.Register(
 		schemaSubject.ID,
-		expense.Expense{},
+		gen.Expense{},
 		sr.EncodeFn(func(v interface{}) ([]byte, error) {
 			return avro.Marshal(avroSchema, v)
 		}),

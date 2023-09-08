@@ -6,13 +6,13 @@ services:
       dockerfile: Dockerfile
     container_name: event-stream
     ports:
-      - "9050:9050"
+      - "8083:8083"
     depends_on:
       - init-topic
     environment:
       BROKERS: kafka:9092
       TOPICS: expense-topic
-      SCHEMAREGISTRY: http://kafka:8081
+      SCHEMAREGISTRY: kafka:8081
 
   kafka:
     image: docker.vectorized.io/vectorized/redpanda:latest

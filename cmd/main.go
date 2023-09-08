@@ -1,9 +1,8 @@
 package main
 
 import (
-	"context"
+	"fmt"
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,64 +11,33 @@ import (
 	"github.com/dipjyotimetia/event-stream/pkg/config"
 	"github.com/dipjyotimetia/event-stream/pkg/events"
 	"github.com/dipjyotimetia/event-stream/pkg/router"
-	"github.com/go-chi/chi/middleware"
-	"github.com/go-chi/chi/v5"
+	"github.com/goccy/go-json"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/monitor"
 )
 
+const idleTimeout = 5 * time.Second
+
 func main() {
-	// The HTTP Server
-	logger := log.New(os.Stdout, "http: ", log.LstdFlags)
-	logger.Println("Server is starting...")
-	server := &http.Server{Addr: ":9050", Handler: service(),
-		WriteTimeout: 5 * time.Second,
-		ReadTimeout:  10 * time.Second,
-		IdleTimeout:  15 * time.Second,
-		ErrorLog:     logger,
-	}
-
-	// Server run context
-	serverCtx, serverStopCtx := context.WithCancel(context.Background())
-
-	// Listen for syscall signals for process to interrupt/quit
-	sig := make(chan os.Signal, 1)
-	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
-	go func() {
-		<-sig
-
-		// Create a shutdown context with a grace period of 5 seconds
-		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
-		defer shutdownCancel()
-
-		// Trigger graceful shutdown
-		err := server.Shutdown(shutdownCtx)
-		if err != nil {
-			log.Printf("Error during server shutdown: %v\n", err)
-		}
-
-		serverStopCtx()
-	}()
-
-	// Run the server in a separate goroutine
-	go func() {
-		// Run the server and handle the error
-		err := server.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			log.Printf("Error starting server: %v\n", err)
-		}
-	}()
-
-	// Wait for server context to be stopped
-	<-serverCtx.Done()
-
-	// Server has stopped, perform any cleanup or other actions
-	log.Println("Server stopped gracefully")
-}
-
-func service() http.Handler {
-	r := chi.NewRouter()
-
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
+	app := fiber.New(fiber.Config{
+		IdleTimeout: idleTimeout,
+		JSONEncoder: json.Marshal,
+		JSONDecoder: json.Unmarshal,
+	})
+	app.Use(cors.New())
+	app.Use(helmet.New())
+	app.Use(logger.New(logger.Config{
+		Format:     "${cyan}[${time}] ${white}${pid} ${red}${status} ${blue}[${method}] ${white}${path}\n",
+		TimeFormat: "02-Jan-2006",
+		TimeZone:   "UTC",
+	}))
+	app.Get("/metrics", monitor.New(monitor.Config{Title: "MyService Metrics Page"}))
+	app.Get("/health", func(ctx *fiber.Ctx) error {
+		return ctx.Send([]byte("healthy"))
+	})
 
 	cfg, err := config.NewConfig()
 	if err != nil {
@@ -77,12 +45,22 @@ func service() http.Handler {
 	}
 
 	cc := events.NewKafkaClient(cfg)
+	api := app.Group("/api")
+	router.ExpenseRouter(api, cc, cfg)
+	// Listen from a different goroutine
+	go func() {
+		if err := app.Listen(":8083"); err != nil {
+			log.Panic(err)
+		}
+	}()
+	c := make(chan os.Signal, 1)                    // Create channel to signify a signal being sent
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM) // When an interrupt or termination signal is sent, notify the channel
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("healthy"))
-	})
+	_ = <-c // This blocks the main thread until an interrupt is received
+	fmt.Println("Gracefully shutting down...")
+	_ = app.Shutdown()
 
-	r.Post("/expense", router.ExpenseRouter(cc, cfg))
-
-	return r
+	fmt.Println("Running cleanup tasks...")
+	cc.Close()
+	fmt.Println("Fiber was successful shutdown.")
 }
