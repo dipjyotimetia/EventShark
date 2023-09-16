@@ -12,7 +12,7 @@ services:
     environment:
       BROKERS: kafka:9092
       TOPICS: expense-topic
-      SCHEMAREGISTRY: kafka:8081
+      SCHEMAREGISTRY: kafka:8081  
 
   kafka:
     image: docker.vectorized.io/vectorized/redpanda:latest
@@ -46,7 +46,7 @@ services:
       context: ./docker
       dockerfile: Dockerfile
     depends_on:
-      - kafka
+      - kafka  
 
   console:
     image: docker.redpanda.com/redpandadata/console:latest

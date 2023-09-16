@@ -19,7 +19,7 @@ import (
 // sets the Timestamp field to the current time if it's not already set,
 // creates a Kafka record with the expense data, and sends it to the Kafka topic.
 // Finally, it returns a success response.
-func ExpenseHandler(client *events.KafkaClient, cfg *config.Config) fiber.Handler {
+func ExpenseHandler(ctx context.Context, client *events.KafkaClient, cfg *config.Config) fiber.Handler {
 	// Parse the JSON request body into an Expense struct
 	return func(c *fiber.Ctx) error {
 		var expense gen.Expense
@@ -38,7 +38,7 @@ func ExpenseHandler(client *events.KafkaClient, cfg *config.Config) fiber.Handle
 		record := client.SetExpenseRecord(cfg, expense)
 
 		// Send the Kafka record to the Kafka topic
-		err := client.Producer(context.Background(), record)
+		err := client.Producer(ctx, record)
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 		}

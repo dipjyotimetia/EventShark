@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -16,7 +17,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/helmet"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/gofiber/fiber/v2/middleware/monitor"
 )
 
 const idleTimeout = 5 * time.Second
@@ -34,7 +34,6 @@ func main() {
 		TimeFormat: "02-Jan-2006",
 		TimeZone:   "UTC",
 	}))
-	app.Get("/metrics", monitor.New(monitor.Config{Title: "MyService Metrics Page"}))
 	app.Get("/health", func(ctx *fiber.Ctx) error {
 		return ctx.Send([]byte("healthy"))
 	})
@@ -44,9 +43,10 @@ func main() {
 		log.Fatalf("error loading config")
 	}
 
+	ctx := context.Background()
 	cc := events.NewKafkaClient(cfg)
 	api := app.Group("/api")
-	router.ExpenseRouter(api, cc, cfg)
+	router.ExpenseRouter(api, ctx, cc, cfg)
 	// Listen from a different goroutine
 	go func() {
 		if err := app.Listen(":8083"); err != nil {
@@ -60,7 +60,7 @@ func main() {
 	fmt.Println("Gracefully shutting down...")
 	_ = app.Shutdown()
 
-	fmt.Println("Running cleanup tasks...")
+	log.Println("Running cleanup tasks...")
 	cc.Close()
-	fmt.Println("Fiber was successful shutdown.")
+	log.Println("Fiber was successful shutdown.")
 }

@@ -1,6 +1,8 @@
 package router
 
 import (
+	"context"
+
 	"github.com/dipjyotimetia/event-stream/pkg/config"
 	"github.com/dipjyotimetia/event-stream/pkg/events"
 	"github.com/dipjyotimetia/event-stream/pkg/handler"
@@ -8,6 +10,6 @@ import (
 )
 
 // ExpenseRouter is the Router for GoFiber App
-func ExpenseRouter(app fiber.Router, client *events.KafkaClient, cfg *config.Config) {
-	app.Post("/expense", handler.ExpenseHandler(client, cfg))
+func ExpenseRouter(app fiber.Router,ctx context.Context, client *events.KafkaClient, cfg *config.Config) {
+	app.Post("/expense", handler.ExpenseHandler(ctx,client, cfg))
 }
