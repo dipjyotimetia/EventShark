@@ -44,7 +44,7 @@ services:
   init-topic:
     build:
       context: ./docker
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.init_topic
     depends_on:
       - kafka  
 
