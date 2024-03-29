@@ -1,4 +1,4 @@
-FROM golang:1.21 as builder
+FROM golang:1.22.1-bullseye as builder
 
 ENV CGO_ENABLED=0
 ENV GO111MODULE=on
@@ -22,6 +22,6 @@ RUN set -x && apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -
 
 COPY --from=builder /app/server /app/server
 
-EXPOSE 9050
+EXPOSE 8083
 
 ENTRYPOINT ["/app/server"]
