@@ -18,6 +18,8 @@ jobs:
         with:
           go-version: '1.22'
       - name: Run tests
-        run: make test    
+        run: make test
+      - name: Compose down
+        run: docker-compose down --rmi all
       - name: check logs
         run: docker compose logs -t -f event-stream

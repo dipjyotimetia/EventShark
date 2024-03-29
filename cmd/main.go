@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -57,8 +56,10 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM) // When an interrupt or termination signal is sent, notify the channel
 
 	_ = <-c // This blocks the main thread until an interrupt is received
-	fmt.Println("Gracefully shutting down...")
-	_ = app.Shutdown()
+	log.Println("Gracefully shutting down...")
+	if err := app.Shutdown(); err != nil {
+		log.Printf("Error during shutdown: %v", err)
+	}
 
 	log.Println("Running cleanup tasks...")
 	cc.Close()

@@ -14,7 +14,7 @@ RUN cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=
 RUN cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=server server.json | cfssljson -bare server
 RUN cfssl gencert -ca=ca.pem -ca-key=ca-key.pem -config=ca-config.json -profile=client client.json | cfssljson -bare client
 
-FROM debian:11-slim
+FROM debian:12-slim
 
 COPY --from=cfssl /app/*.pem /app/*.csr /certs/
 
