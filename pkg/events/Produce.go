@@ -43,7 +43,7 @@ func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) error {
 	results := c.Client.ProduceSync(ctx, record)
 	for _, pr := range results {
 		if pr.Err != nil {
-			return fmt.Errorf("Error sending synchronous message: %v \n", pr.Err)
+			return fmt.Errorf("error sending synchronous message: %v", pr.Err)
 		} else {
 			fmt.Printf("Message sent: topic: %s, offset: %d, partition: %d \n",
 				pr.Record.Topic, pr.Record.Offset, pr.Record.Partition)
