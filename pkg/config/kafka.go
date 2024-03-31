@@ -11,9 +11,9 @@ import (
 
 // Config represents the application configuration.
 type Config struct {
-	Brokers        string `env:"BROKERS" envDefault:"localhost:9092"`
-	Topics         string `env:"TOPICS" envDefault:"expense-topic"`
-	SchemaRegistry string `env:"SCHEMAREGISTRY" envDefault:"localhost:8081"`
+	Brokers        string   `env:"BROKERS" envDefault:"localhost:9092"`
+	Topics         []string `env:"TOPICS" envDefault:"expense-topic,payment-topic,transaction-topic"`
+	SchemaRegistry string   `env:"SCHEMAREGISTRY" envDefault:"localhost:8081"`
 }
 
 // KafkaTLS represents the configuration for Kafka TLS settings.
@@ -28,7 +28,7 @@ type KafkaTLS struct {
 // NewConfig creates a new Config instance by parsing environment variables.
 // It returns a pointer to the Config and an error if there was a problem parsing the environment variables.
 func NewConfig() (*Config, error) {
-	var cfg Config
+	cfg := Config{}
 	if err := env.Parse(&cfg); err != nil {
 		return nil, fmt.Errorf("error processing environment variables: %w", err)
 	}

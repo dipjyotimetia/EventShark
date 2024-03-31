@@ -46,6 +46,7 @@ func main() {
 	cc := events.NewKafkaClient(cfg)
 	api := app.Group("/api")
 	router.ExpenseRouter(api, ctx, cc, cfg)
+	router.PaymentRouter(api, ctx, cc, cfg)
 	// Listen from a different goroutine
 	go func() {
 		if err := app.Listen(":8083"); err != nil {
@@ -55,7 +56,7 @@ func main() {
 	c := make(chan os.Signal, 1)                    // Create channel to signify a signal being sent
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM) // When an interrupt or termination signal is sent, notify the channel
 
-	_ = <-c // This blocks the main thread until an interrupt is received
+	<-c // This blocks the main thread until an interrupt is received
 	log.Println("Gracefully shutting down...")
 	if err := app.Shutdown(); err != nil {
 		log.Printf("Error during shutdown: %v", err)

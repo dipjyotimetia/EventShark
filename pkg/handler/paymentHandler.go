@@ -1,5 +1,3 @@
-// Package router provides an HTTP handler function for handling expense-related routes.
-
 package handler
 
 import (
@@ -13,23 +11,21 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// ExpenseHandler returns an HTTP handler function for creating expense records.
-// It takes a KafkaClient instance and a Config instance as input.
-func ExpenseHandler(ctx context.Context, client *events.KafkaClient, cfg *config.Config) fiber.Handler {
+func PaymentHandler(ctx context.Context, client *events.KafkaClient, cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var expense gen.Expense
+		var payment gen.Payment
 
-		if err := c.BodyParser(&expense); err != nil {
+		if err := c.BodyParser(&payment); err != nil {
 			c.Status(http.StatusBadRequest)
 			return err
 		}
 
 		// Set the Timestamp field to current time if it's not already set
-		if expense.Timestamp == 0 {
-			expense.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
+		if payment.Timestamp == 0 {
+			payment.Timestamp = time.Now().UnixNano() / int64(time.Millisecond)
 		}
 
-		record, err := client.SetRecord(cfg, expense, "expense-topic", gen.Expense{})
+		record, err := client.SetRecord(cfg, payment, "payment-topic", gen.Payment{})
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 		}
@@ -38,7 +34,6 @@ func ExpenseHandler(ctx context.Context, client *events.KafkaClient, cfg *config
 		if err != nil {
 			c.Status(http.StatusInternalServerError)
 		}
-
 		c.SendStatus(http.StatusOK) //nolint:errcheck
 		return c.Send([]byte("expense created successfully"))
 	}

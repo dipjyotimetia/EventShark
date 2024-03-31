@@ -11,7 +11,7 @@ services:
       - init-topic
     environment:
       BROKERS: kafka:9092
-      TOPICS: expense-topic
+      TOPICS: expense-topic,payment-topic,transaction-topic
       SCHEMAREGISTRY: kafka:8081  
 
   kafka:

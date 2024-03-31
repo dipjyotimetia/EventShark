@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dipjyotimetia/event-stream/gen"
 	"github.com/dipjyotimetia/event-stream/pkg/config"
 	"github.com/hamba/avro/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -29,7 +28,6 @@ func NewKafkaClient(cfg *config.Config) *KafkaClient {
 	seeds := []string{cfg.Brokers}
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
-		kgo.DefaultProduceTopic("expense-topic"),
 	)
 	if err != nil {
 		fmt.Printf("error initializing Kafka producer client: %v\n", err)
@@ -53,30 +51,34 @@ func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) error {
 }
 
 // getSchema retrieves the Avro schema for the specified subject from the schema registry.
-func getSchema(cfg config.Config, subject string) sr.SubjectSchema {
+// getSchema retrieves the Avro schema for the specified subject from the schema registry.
+func getSchema(cfg config.Config, subject string) (sr.SubjectSchema, error) {
 	rcl, err := sr.NewClient(sr.URLs(cfg.SchemaRegistry))
 	if err != nil {
-		_ = fmt.Errorf("unable to create schema registry client")
+		return sr.SubjectSchema{}, fmt.Errorf("unable to create schema registry client: %w", err)
 	}
 	schemaSubject, err := rcl.SchemaByVersion(context.Background(), subject, -1)
 	if err != nil {
-		_ = fmt.Errorf("unable to get schema registry client")
+		return sr.SubjectSchema{}, fmt.Errorf("unable to get schema registry client: %w", err)
 	}
-	return schemaSubject
+	return schemaSubject, nil
 }
 
-// SetExpenseRecord encodes the provided data using Avro and creates a Kafka record with the encoded value.
-func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts interface{}) *kgo.Record {
-	schemaSubject := getSchema(*cfg, "expense-topic-value")
+// SetRecord encodes the provided data using Avro and creates a Kafka record with the encoded value.
+func (c KafkaClient) SetRecord(cfg *config.Config, ts interface{}, topic string, schemaType interface{}) (*kgo.Record, error) {
+	schemaSubject, err := getSchema(*cfg, topic+"-value")
+	if err != nil {
+		return nil, err
+	}
 	avroSchema, err := avro.Parse(schemaSubject.Schema.Schema)
 	if err != nil {
-		_ = fmt.Errorf("unable to parse avro schema")
+		return nil, fmt.Errorf("unable to parse avro schema: %w", err)
 	}
 
 	var serde sr.Serde
 	serde.Register(
 		schemaSubject.ID,
-		gen.Expense{},
+		schemaType,
 		sr.EncodeFn(func(v interface{}) ([]byte, error) {
 			return avro.Marshal(avroSchema, v)
 		}),
@@ -87,8 +89,9 @@ func (c KafkaClient) SetExpenseRecord(cfg *config.Config, ts interface{}) *kgo.R
 	tt := serde.MustEncode(ts)
 	record := kgo.Record{
 		Value: tt,
+		Topic: topic,
 	}
-	return &record
+	return &record, nil
 }
 
 // Ptr returns a pointer to the provided value.
