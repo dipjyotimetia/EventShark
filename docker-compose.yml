@@ -1,45 +1,45 @@
 version: '3.8'
 services:
-  event-stream:
+  event-publisher:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: event-stream
+    container_name: event-publisher
     ports:
       - "8083:8083"
     depends_on:
       - init-topic
     environment:
-      BROKERS: kafka:9092
+      BROKERS: kafka:29092
       TOPICS: expense-topic,payment-topic,transaction-topic
-      SCHEMAREGISTRY: kafka:8081  
+      SCHEMAREGISTRY: kafka:8081
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
 
   kafka:
     image: docker.vectorized.io/vectorized/redpanda:latest
     container_name: kafka
     command:
-      - redpanda
-      - start
-      - --smp
-      - "1"
+      - redpanda start
+      - --smp 1
+      - --memory 1G
+      - --reserve-memory 0M
       - --overprovisioned
-      - --kafka-addr
-      - "PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092"
-      - --advertise-kafka-addr
-      - "PLAINTEXT://kafka:29092,OUTSIDE://kafka:9092"
-      - --pandaproxy-addr
-      - "0.0.0.0:8082"
-      - --advertise-pandaproxy-addr
-      - "localhost:8082"
+      - --node-id 0
+      - --check=false
+      - --kafka-addr PLAINTEXT://0.0.0.0:29092,OUTSIDE://0.0.0.0:9092
+      - --advertise-kafka-addr PLAINTEXT://kafka:29092,OUTSIDE://localhost:9092
+      - --pandaproxy-addr 0.0.0.0:8082
+      - --advertise-pandaproxy-addr localhost:8082
     ports:
       - "8081:8081"
       - "8082:8082"
       - "9092:9092"
       - "29092:29092"
-    environment:
-      REDPANDA_AUTO_CREATE_TOPICS_ENABLED: "true"
-      REDPANDA_DEFAULT_REPLICATION_FACTOR: "1"
-      REDPANDA_LOG_LEVEL: "info"
 
   init-topic:
     build:
