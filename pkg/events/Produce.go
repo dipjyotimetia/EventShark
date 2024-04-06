@@ -6,7 +6,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/dipjyotimetia/event-stream/pkg/config"
+	"github.com/dipjyotimetia/event-shark/pkg/config"
 	"github.com/hamba/avro/v2"
 	"github.com/twmb/franz-go/pkg/kgo"
 	"github.com/twmb/franz-go/pkg/sr"

@@ -6,7 +6,7 @@ on:
 
 jobs:
   test:
-    name: Event-Stream
+    name: event-shark
     runs-on: ubuntu-latest
     env:
       DOCKER_BUILDKIT: 1
@@ -22,4 +22,4 @@ jobs:
       - name: Compose down
         run: docker-compose down --rmi all
       - name: check logs
-        run: docker compose logs -t -f event-stream
+        run: docker compose logs -t -f event-shark

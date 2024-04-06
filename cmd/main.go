@@ -8,9 +8,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/dipjyotimetia/event-stream/pkg/config"
-	"github.com/dipjyotimetia/event-stream/pkg/events"
-	"github.com/dipjyotimetia/event-stream/pkg/router"
+	"github.com/dipjyotimetia/event-shark/pkg/config"
+	"github.com/dipjyotimetia/event-shark/pkg/events"
+	"github.com/dipjyotimetia/event-shark/pkg/router"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"

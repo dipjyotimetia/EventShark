@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dipjyotimetia/event-stream/gen"
-	"github.com/dipjyotimetia/event-stream/pkg/config"
-	"github.com/dipjyotimetia/event-stream/pkg/events"
+	"github.com/dipjyotimetia/event-shark/gen"
+	"github.com/dipjyotimetia/event-shark/pkg/config"
+	"github.com/dipjyotimetia/event-shark/pkg/events"
 	"github.com/gofiber/fiber/v2"
 )
 

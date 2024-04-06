@@ -3,9 +3,9 @@ package router
 import (
 	"context"
 
-	"github.com/dipjyotimetia/event-stream/pkg/config"
-	"github.com/dipjyotimetia/event-stream/pkg/events"
-	"github.com/dipjyotimetia/event-stream/pkg/handler"
+	"github.com/dipjyotimetia/event-shark/pkg/config"
+	"github.com/dipjyotimetia/event-shark/pkg/events"
+	"github.com/dipjyotimetia/event-shark/pkg/handler"
 	"github.com/gofiber/fiber/v2"
 )
 

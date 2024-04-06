@@ -1,4 +1,4 @@
-module github.com/dipjyotimetia/event-stream
+module github.com/dipjyotimetia/event-shark
 
 go 1.22
 

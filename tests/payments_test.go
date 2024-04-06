@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dipjyotimetia/event-stream/gen"
+	"github.com/dipjyotimetia/event-shark/gen"
 )
 
 func TestPaymentsAPI(t *testing.T) {
