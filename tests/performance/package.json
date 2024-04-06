@@ -1,0 +1,14 @@
+{
+  "name": "performance",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "k6 run tests/perf.js"
+  },
+  "author": "Dipjyoti Metia",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/k6": "^0.50.0"
+  }
+}

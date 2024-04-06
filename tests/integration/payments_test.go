@@ -28,7 +28,7 @@ func TestPaymentsAPI(t *testing.T) {
 				Currency:      "AUD",
 				Timestamp:     time.Now().UnixNano() / int64(time.Millisecond),
 				PaymentMethod: "credit",
-				Status:        "success",
+				Status:        "COMPLETED",
 			},
 			expected: http.StatusOK,
 		},
