@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	go test ./... -v --tags=integration
+	go test ./... -v --tags=integration -count=1
 
 .PHONY: build
 build:
