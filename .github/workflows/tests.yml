@@ -19,6 +19,10 @@ jobs:
           go-version-file: ./go.mod
       - name: Run tests
         run: make test
+      - name: Run k6 local test
+        uses: grafana/k6-action@v0.3.1
+        with:
+          filename: tests/performance/tests/perf.js  
       - name: Compose down
         run: docker-compose down --rmi all
       - name: check logs
