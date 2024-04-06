@@ -1,5 +1,5 @@
 # Build stage
-FROM golang:1.22.1-bullseye as builder
+FROM golang:1.22.2-bullseye as builder
 
 LABEL author="Dipjyoti Metia"
 LABEL version="1.0"

@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  event-publisher:
+  event-shark:
     build:
       context: .
       dockerfile: Dockerfile
