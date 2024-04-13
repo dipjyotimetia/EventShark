@@ -8,7 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/hamba/avro/v2 v2.20.1
 	github.com/twmb/franz-go v1.16.1
-	github.com/twmb/franz-go/pkg/sr v0.0.0-20240307025822-351e7fae879c
+	github.com/twmb/franz-go/pkg/sr v0.0.0-20240412162337-6a58760afaa7
 )
 
 require (
