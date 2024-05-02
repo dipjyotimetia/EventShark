@@ -3,12 +3,12 @@ module github.com/dipjyotimetia/event-shark
 go 1.22
 
 require (
-	github.com/caarlos0/env/v10 v10.0.0
+	github.com/caarlos0/env/v11 v11.0.0
 	github.com/goccy/go-json v0.10.2
 	github.com/gofiber/fiber/v2 v2.52.4
-	github.com/hamba/avro/v2 v2.20.1
+	github.com/hamba/avro/v2 v2.21.1
 	github.com/twmb/franz-go v1.16.1
-	github.com/twmb/franz-go/pkg/sr v0.0.0-20240412162337-6a58760afaa7
+	github.com/twmb/franz-go/pkg/sr v0.0.0-20240430054423-8b5395896363
 )
 
 require (

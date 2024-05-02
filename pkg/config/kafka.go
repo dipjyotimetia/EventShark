@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/caarlos0/env/v10"
+	"github.com/caarlos0/env/v11"
 )
 
 // Config represents the application configuration.
