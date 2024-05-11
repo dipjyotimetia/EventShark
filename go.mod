@@ -8,7 +8,7 @@ require (
 	github.com/gofiber/fiber/v2 v2.52.4
 	github.com/hamba/avro/v2 v2.21.1
 	github.com/twmb/franz-go v1.16.1
-	github.com/twmb/franz-go/pkg/sr v0.0.0-20240430054423-8b5395896363
+	github.com/twmb/franz-go/pkg/sr v0.0.0-20240509060506-c77d58eb5693
 )
 
 require (
@@ -25,9 +25,9 @@ require (
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/stretchr/testify v1.8.4 // indirect
-	github.com/twmb/franz-go/pkg/kmsg v1.7.0 // indirect
+	github.com/twmb/franz-go/pkg/kmsg v1.8.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasthttp v1.52.0 // indirect
 	github.com/valyala/tcplisten v1.0.0 // indirect
-	golang.org/x/sys v0.19.0 // indirect
+	golang.org/x/sys v0.20.0 // indirect
 )
