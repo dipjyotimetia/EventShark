@@ -5,7 +5,7 @@ go 1.22
 require (
 	github.com/caarlos0/env/v11 v11.0.1
 	github.com/goccy/go-json v0.10.3
-	github.com/gofiber/fiber/v2 v2.52.4
+	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/hamba/avro/v2 v2.22.1
 	github.com/twmb/franz-go v1.17.0
 	github.com/twmb/franz-go/pkg/sr v0.0.0-20240528135259-7641d9e673e3
