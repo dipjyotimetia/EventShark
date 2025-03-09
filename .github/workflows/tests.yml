@@ -30,7 +30,7 @@ jobs:
       - name: Generate Test Report
         uses: dipjyotimetia/gotest-report@main
         with:
-          test-json-file: test-output.json
+          test-json-file: test-report.json
           output-file: test-report.md
           comment-pr: true  
       - name: Compose down
