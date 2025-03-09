@@ -48,7 +48,7 @@ services:
       - kafka  
 
   console:
-    image: redpandadata/redpandadata/console:latest
+    image: redpandadata/console:latest
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml && /app/console"
     container_name: console
