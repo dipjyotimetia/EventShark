@@ -1,5 +1,4 @@
-# Build stage
-FROM golang:1.24-bullseye as builder
+FROM golang:1.24-bullseye AS builder
 
 LABEL org.opencontainers.image.authors="Dipjyoti Metia"
 LABEL org.opencontainers.image.version="1.0"

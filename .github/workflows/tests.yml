@@ -26,7 +26,6 @@ jobs:
         run: make test
       - name: Extract test results from container
         run: |
-          docker cp eventstream:/app/test-report.json ./test-report.json
           ls -la ./test-report.json  # Verify file was extracted
       - name: Generate Test Report
         uses: dipjyotimetia/gotest-report@main

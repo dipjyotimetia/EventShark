@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: event-publisher
+    container_name: eventstream
     ports:
       - "8083:8083"
     depends_on:
