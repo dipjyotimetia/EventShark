@@ -1,10 +1,9 @@
-version: '3.8'
 services:
   event-shark:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: event-publisher
+    container_name: eventstream
     ports:
       - "8083:8083"
     depends_on:
@@ -21,7 +20,7 @@ services:
       start_period: 20s
 
   kafka:
-    image: docker.vectorized.io/vectorized/redpanda:latest
+    image: redpandadata/redpanda:latest
     container_name: kafka
     command:
       - redpanda start
@@ -49,7 +48,7 @@ services:
       - kafka  
 
   console:
-    image: docker.redpanda.com/redpandadata/console:latest
+    image: redpandadata/console:latest
     entrypoint: /bin/sh
     command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml && /app/console"
     container_name: console

@@ -9,6 +9,6 @@
   "author": "Dipjyoti Metia",
   "license": "MIT",
   "devDependencies": {
-    "@types/k6": "^0.50.0"
+    "@types/k6": "^0.57.1"
   }
 }

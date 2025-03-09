@@ -1,6 +1,6 @@
 .PHONY: test
 test:
-	go test ./... -v --tags=integration -count=1
+	go test ./... -v --tags=integration -count=1 --json > test-report.json
 
 .PHONY: build
 build:

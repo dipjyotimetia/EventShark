@@ -1,4 +1,4 @@
-FROM docker.vectorized.io/vectorized/redpanda:latest
+FROM redpandadata/redpanda:latest
 
 # Copy scripts
 COPY create_topics.sh /create_topics.sh
