@@ -59,6 +59,10 @@ Example:
 export CONFIG_FILE="/path/to/config.json"
 ```
 
+## Docker Compose Environment Variables
+
+When running with Docker Compose, you can override environment variables in the `docker-compose.yml` file under the `environment` section for each service.
+
 ## Examples
 
 ### Example 1: Using Environment Variables

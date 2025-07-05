@@ -70,4 +70,15 @@ The project relies on the following dependencies:
      make clean
      ```
 
+## AVSC to JSON Utility
+
+If you need to convert Avro schemas to JSON for use with the Schema Registry, use the utility in `script/avsc2json`. See [script/avsc2json/readme.md](../script/avsc2json/readme.md) for details.
+
+## Troubleshooting
+
+- If Docker containers fail to start, check logs with `docker-compose logs`.
+- If topics or schemas are missing, ensure the `init-topic` service completes successfully.
+- For port conflicts, ensure ports 8083, 8086, 8081, 8082, 9092, and 29092 are free.
+- For schema errors, verify your Avro schemas and use the AVSC to JSON utility.
+
 By following these steps, you should have the Event Shark project set up and running on your local machine.

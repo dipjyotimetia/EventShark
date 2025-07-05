@@ -50,4 +50,14 @@ We are committed to fostering a welcoming and inclusive community. By participat
 
 By contributing to Event Shark, you agree that your contributions will be licensed under the [MIT License](LICENSE).
 
+### Testing Before PRs
+
+Please run all tests (`make test`) before submitting a pull request. Ensure your changes do not break existing functionality.
+
+### Code and Schema Generation
+
+If you modify Avro schemas or generated code, run the code and schema generation steps:
+- `make code-gen` for Go code generation
+- `make schema-gen` for JSON schema generation
+
 Thank you for your contributions and support!

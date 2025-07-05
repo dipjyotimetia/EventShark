@@ -47,3 +47,11 @@ Event Shark provides a serverless framework for Kafka event publishing. It allow
 - **Performance Testing**: Run targeted performance tests on consumer applications.
 
 By using Event Shark, you can accelerate your Kafka-driven development, gain confidence in your consumer code, and optimize performance.
+
+## Utilities
+
+### AVSC to JSON Converter
+Convert Avro schemas to JSON for use with the Schema Registry. See [script/avsc2json/readme.md](../script/avsc2json/readme.md).
+
+### Example Kafka Consumer
+A sample Go consumer is provided in [script/consumer/main.go](../script/consumer/main.go) to help you test event consumption from Kafka topics.

@@ -113,3 +113,14 @@ default ✓ [======================================] 50 VUs  30s
      vus............................: 50      min=50    max=50
      vus_max........................: 50      min=50    max=50
 ```
+
+## Test Reports
+
+- Integration test output is saved as `test-report.json`.
+- In CI, a Markdown summary is generated as `test-report.md`.
+
+## Troubleshooting
+
+- If tests fail to connect to Kafka, ensure all Docker services are running.
+- For schema errors, verify your Avro schemas and JSON conversions.
+- For port conflicts, ensure test ports are not in use.
