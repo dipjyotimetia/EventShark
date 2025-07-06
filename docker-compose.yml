@@ -49,17 +49,11 @@ services:
 
   console:
     image: redpandadata/console:latest
-    entrypoint: /bin/sh
-    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml && /app/console"
     container_name: console
     environment:
-      CONFIG_FILEPATH: /tmp/config.yml
-      CONSOLE_CONFIG_FILE: |
-        kafka:
-          brokers: ["kafka:29092"]
-          schemaRegistry:
-            enabled: true
-            urls: ["http://kafka:8081"]
+      KAFKA_BROKERS: kafka:29092
+      KAFKA_SCHEMAREGISTRY_ENABLED: "true"
+      KAFKA_SCHEMAREGISTRY_URLS: "http://kafka:8081"
     ports:
       - "8086:8080"
     depends_on:
