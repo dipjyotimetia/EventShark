@@ -67,7 +67,7 @@ func (c *Config) Validate() error {
 	}
 
 	// Validate brokers
-	if c.Brokers == "" {
+	if c.Brokers == "" || strings.TrimSpace(c.Brokers) == "" {
 		return fmt.Errorf("Kafka brokers cannot be empty")
 	}
 

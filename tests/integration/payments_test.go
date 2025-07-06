@@ -48,6 +48,7 @@ func TestPaymentsAPI(t *testing.T) {
 				Amount:        50.00,
 				Currency:      "USD",
 				PaymentMethod: "DEBIT_CARD",
+				Timestamp:     time.Now().UnixNano() / int64(time.Millisecond),
 				Status:        "PENDING",
 			},
 			expectedCode: http.StatusCreated,

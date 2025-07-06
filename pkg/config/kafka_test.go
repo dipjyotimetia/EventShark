@@ -66,7 +66,7 @@ func TestNewConfig(t *testing.T) {
 		{
 			name: "empty brokers",
 			envVars: map[string]string{
-				"BROKERS": "",
+				"BROKERS": " ",
 			},
 			expectError: true,
 		},
