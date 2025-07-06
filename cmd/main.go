@@ -10,59 +10,98 @@ import (
 
 	"github.com/dipjyotimetia/event-shark/pkg/config"
 	"github.com/dipjyotimetia/event-shark/pkg/events"
+	"github.com/dipjyotimetia/event-shark/pkg/health"
+	"github.com/dipjyotimetia/event-shark/pkg/logger"
+	"github.com/dipjyotimetia/event-shark/pkg/middleware"
 	"github.com/dipjyotimetia/event-shark/pkg/router"
+	"github.com/dipjyotimetia/event-shark/pkg/validator"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
-	"github.com/gofiber/fiber/v2/middleware/helmet"
-	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/recover"
 )
 
-const idleTimeout = 5 * time.Second
+const (
+	version = "1.0.0"
+)
 
 func main() {
-	app := fiber.New(fiber.Config{
-		IdleTimeout: idleTimeout,
-		JSONEncoder: json.Marshal,
-		JSONDecoder: json.Unmarshal,
-	})
-	app.Use(cors.New())
-	app.Use(helmet.New())
-	app.Use(logger.New(logger.Config{
-		Format:     "${cyan}[${time}] ${white}${pid} ${red}${status} ${blue}[${method}] ${white}${path}\n",
-		TimeFormat: "02-Jan-2006",
-		TimeZone:   "UTC",
-	}))
-	app.Get("/health", func(ctx *fiber.Ctx) error {
-		return ctx.Send([]byte("healthy"))
-	})
+	// Initialize logger
+	appLogger := logger.New()
 
+	// Load configuration
 	cfg, err := config.NewConfig()
 	if err != nil {
-		log.Fatalf("error loading config")
+		log.Fatalf("Failed to load configuration: %v", err)
 	}
 
+	// Create Kafka client
+	kafkaClient, err := events.NewKafkaClient(cfg)
+	if err != nil {
+		log.Fatalf("Failed to create Kafka client: %v", err)
+	}
+	defer kafkaClient.Close()
+
+	// Initialize validator
+	val := validator.NewValidator()
+
+	// Initialize health checker
+	healthChecker := health.NewHealthChecker(kafkaClient, cfg, version)
+
+	// Create Fiber app with custom configuration
+	app := fiber.New(fiber.Config{
+		IdleTimeout:  30 * time.Second,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 10 * time.Second,
+		JSONEncoder:  json.Marshal,
+		JSONDecoder:  json.Unmarshal,
+		ErrorHandler: middleware.ErrorHandler(appLogger),
+	})
+
+	// Add middleware
+	app.Use(recover.New())
+	app.Use(middleware.Recovery(appLogger))
+	app.Use(middleware.RequestID())
+	app.Use(middleware.CORS())
+	app.Use(middleware.RateLimit(1000, time.Minute)) // 1000 requests per minute
+
+	// Health check endpoints
+	app.Get("/health", healthChecker.Handler())
+	app.Get("/health/ready", healthChecker.ReadinessHandler())
+	app.Get("/health/live", healthChecker.LivenessHandler())
+
+	// API routes
 	ctx := context.Background()
-	cc := events.NewKafkaClient(cfg)
 	api := app.Group("/api")
-	router.ExpenseRouter(api, ctx, cc, cfg)
-	router.PaymentRouter(api, ctx, cc, cfg)
-	// Listen from a different goroutine
+	router.ExpenseRouter(api, ctx, kafkaClient, cfg, val, appLogger)
+	router.PaymentRouter(api, ctx, kafkaClient, cfg, val, appLogger)
+
+	// Start server in a goroutine
 	go func() {
-		if err := app.Listen(":8083"); err != nil {
-			log.Panic(err)
+		if err := app.Listen(":" + cfg.ServerPort); err != nil {
+			log.Fatalf("Failed to start server: %v", err)
 		}
 	}()
-	c := make(chan os.Signal, 1)                    // Create channel to signify a signal being sent
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM) // When an interrupt or termination signal is sent, notify the channel
 
-	<-c // This blocks the main thread until an interrupt is received
-	log.Println("Gracefully shutting down...")
-	if err := app.Shutdown(); err != nil {
-		log.Printf("Error during shutdown: %v", err)
+	appLogger.LogInfo(context.Background(), "Event Shark server started",
+		"version", version,
+		"port", cfg.ServerPort,
+		"environment", cfg.Environment,
+	)
+
+	// Wait for interrupt signal to gracefully shutdown the server
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	<-quit
+	appLogger.LogInfo(context.Background(), "Shutting down server...")
+
+	// Create a context with timeout for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.ShutdownTimeout)
+	defer cancel()
+
+	if err := app.ShutdownWithContext(ctx); err != nil {
+		appLogger.LogError(context.Background(), err, "Server forced to shutdown")
 	}
 
-	log.Println("Running cleanup tasks...")
-	cc.Close()
-	log.Println("Fiber was successful shutdown.")
+	appLogger.LogInfo(context.Background(), "Server gracefully stopped")
 }
