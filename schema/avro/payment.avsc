@@ -33,7 +33,7 @@
       "type": {
         "name": "Status",
         "type": "enum",
-        "symbols" : ["INITIATED", "PROCESSED", "COMPLETED", "FAILED"]
+        "symbols" : ["PENDING", "COMPLETED", "FAILED", "CANCELLED"]
       }
     }
   ]
