@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/caarlos0/env/v11 v11.3.1
 	github.com/goccy/go-json v0.10.5
-	github.com/gofiber/fiber/v2 v2.52.8
+	github.com/gofiber/fiber/v2 v2.52.9
 	github.com/hamba/avro/v2 v2.29.0
 	github.com/twmb/franz-go v1.19.5
 	github.com/twmb/franz-go/pkg/sr v1.4.0
