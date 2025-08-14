@@ -11,7 +11,7 @@ services:
     environment:
       BROKERS: kafka:29092
       TOPICS: expense-topic,payment-topic,transaction-topic
-      SCHEMAREGISTRY: kafka:8081
+      SCHEMAREGISTRY: http://kafka:8081
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8083/health"]
       interval: 30s

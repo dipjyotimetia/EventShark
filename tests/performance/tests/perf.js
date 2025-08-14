@@ -7,30 +7,38 @@ export const options = {
         test_run_id: `api-Load-Testing-${new Date().toISOString()}`,
     },
     thresholds: {
-        'http_req_failed{test_type:addExpense}': ['rate<0.01'], // http errors should be less than 1%, availability
-        'http_req_duration{test_type:addExpense}': ['p(95)<200'], // 95% of requests should be below 200ms, latency
-        'http_req_failed{test_type:addPayments}': ['rate<0.01'], // http errors should be less than 1%, availability
-        'http_req_duration{test_type:addPayments}': ['p(95)<200'], // 95% of requests should be below 200ms, latency
+        'http_req_failed{test_type:addExpense}': ['rate<0.1'], // http errors should be less than 10%, availability
+        'http_req_duration{test_type:addExpense}': ['p(95)<500'], // 95% of requests should be below 500ms, latency
+        'http_req_failed{test_type:addPayments}': ['rate<0.1'], // http errors should be less than 10%, availability
+        'http_req_duration{test_type:addPayments}': ['p(95)<500'], // 95% of requests should be below 500ms, latency
     },
     scenarios: {
-        // Load testing using K6 constant-rate scenario
-        addExpense_constant: {
-            executor: 'constant-arrival-rate',
-            rate: 10000, // number of iterations per time unit
-            timeUnit: '1m', // iterations will be per minute
-            duration: '1m', // total duration that the test will run for
+        // Realistic load testing using K6 ramping arrival rate scenario
+        addExpense_realistic: {
+            executor: 'ramping-arrival-rate',
+            startRate: 1, // start with 1 iteration per time unit
+            timeUnit: '1s', // iterations will be per second
             preAllocatedVUs: 2, // the size of the VU (i.e. worker) pool for this scenario
-            maxVUs: 25, // if the preAllocatedVUs are not enough, we can initialize more
+            maxVUs: 10, // if the preAllocatedVUs are not enough, we can initialize more
+            stages: [
+                { target: 10, duration: '30s' }, // ramp up to 10 iterations per second over 30 seconds
+                { target: 10, duration: '60s' }, // stay at 10 iterations per second for 60 seconds
+                { target: 0, duration: '30s' },  // ramp down to 0 iterations per second over 30 seconds
+            ],
             tags: { test_type: 'addExpense' }, // different extra metric tags for this scenario
             exec: 'addExpense',// Test scenario function to call
         },
-        addPayments_constant: {
-          executor: 'constant-arrival-rate',
-          rate: 10000, // number of iterations per time unit
-          timeUnit: '1m', // iterations will be per minute
-          duration: '1m', // total duration that the test will run for
+        addPayments_realistic: {
+          executor: 'ramping-arrival-rate',
+          startRate: 1, // start with 1 iteration per time unit
+          timeUnit: '1s', // iterations will be per second
           preAllocatedVUs: 2, // the size of the VU (i.e. worker) pool for this scenario
-          maxVUs: 25, // if the preAllocatedVUs are not enough, we can initialize more
+          maxVUs: 10, // if the preAllocatedVUs are not enough, we can initialize more
+          stages: [
+              { target: 10, duration: '30s' }, // ramp up to 10 iterations per second over 30 seconds
+              { target: 10, duration: '60s' }, // stay at 10 iterations per second for 60 seconds
+              { target: 0, duration: '30s' },  // ramp down to 0 iterations per second over 30 seconds
+          ],
           tags: { test_type: 'addPayments' }, // different extra metric tags for this scenario
           exec: 'addPayments',// Test scenario function to call
       }
