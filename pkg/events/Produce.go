@@ -4,7 +4,10 @@ package events
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/dipjyotimetia/event-shark/pkg/config"
 	"github.com/hamba/avro/v2"
@@ -12,9 +15,19 @@ import (
 	"github.com/twmb/franz-go/pkg/sr"
 )
 
+// SchemaCache represents a cached schema with its serde
+type SchemaCache struct {
+	Schema     sr.SubjectSchema
+	AvroSchema avro.Schema
+	Serde      *sr.Serde
+}
+
 // KafkaClient wraps a kgo.Client to provide Kafka producer functionality.
 type KafkaClient struct {
 	*kgo.Client
+	schemaCache map[string]*SchemaCache
+	mutex       sync.RWMutex
+	srClient    *sr.Client
 }
 
 // Produce defines the interface for producing messages to Kafka.
@@ -26,18 +39,36 @@ type Produce interface {
 // It initializes a Kafka producer client and returns a KafkaClient instance.
 func NewKafkaClient(cfg *config.Config) *KafkaClient {
 	seeds := []string{cfg.Brokers}
+	
+	// Create Schema Registry client
+	srClient, err := sr.NewClient(sr.URLs(cfg.SchemaRegistry))
+	if err != nil {
+		fmt.Printf("error initializing Schema Registry client: %v\n", err)
+		return &KafkaClient{}
+	}
+
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
+		kgo.ProducerBatchCompression(kgo.GzipCompression()),
+		kgo.RequiredAcks(kgo.AllISRAcks()),
+		kgo.RecordRetries(3),
+		kgo.ProducerBatchMaxBytes(1000000), // 1MB
+		kgo.ProducerLinger(5*time.Millisecond),
 	)
 	if err != nil {
 		fmt.Printf("error initializing Kafka producer client: %v\n", err)
 		return &KafkaClient{}
 	}
-	return &KafkaClient{client}
+
+	return &KafkaClient{
+		Client:      client,
+		schemaCache: make(map[string]*SchemaCache),
+		srClient:    srClient,
+	}
 }
 
 // Producer sends a Kafka record synchronously and prints the result.
-func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) error {
+func (c *KafkaClient) Producer(ctx context.Context, record *kgo.Record) error {
 	results := c.Client.ProduceSync(ctx, record)
 	for _, pr := range results {
 		if pr.Err != nil {
@@ -50,45 +81,85 @@ func (c KafkaClient) Producer(ctx context.Context, record *kgo.Record) error {
 	return nil
 }
 
-// getSchema retrieves the Avro schema for the specified subject from the schema registry.
-// getSchema retrieves the Avro schema for the specified subject from the schema registry.
-func getSchema(cfg config.Config, subject string) (sr.SubjectSchema, error) {
-	rcl, err := sr.NewClient(sr.URLs(cfg.SchemaRegistry))
-	if err != nil {
-		return sr.SubjectSchema{}, fmt.Errorf("unable to create schema registry client: %w", err)
+// Close closes the Kafka client and cleans up resources
+func (c *KafkaClient) Close() {
+	if c.Client != nil {
+		c.Client.Close()
 	}
-	schemaSubject, err := rcl.SchemaByVersion(context.Background(), subject, -1)
-	if err != nil {
-		return sr.SubjectSchema{}, fmt.Errorf("unable to get schema registry client: %w", err)
-	}
-	return schemaSubject, nil
 }
 
-// SetRecord encodes the provided data using Avro and creates a Kafka record with the encoded value.
-func (c KafkaClient) SetRecord(cfg *config.Config, ts interface{}, topic string, schemaType interface{}) (*kgo.Record, error) {
-	schemaSubject, err := getSchema(*cfg, topic+"-value")
-	if err != nil {
-		return nil, err
+// getOrCreateSchemaCache retrieves or creates a cached schema for the specified subject
+func (c *KafkaClient) getOrCreateSchemaCache(subject string) (*SchemaCache, error) {
+	c.mutex.RLock()
+	cached, exists := c.schemaCache[subject]
+	c.mutex.RUnlock()
+
+	if exists {
+		return cached, nil
 	}
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
+	// Double-check pattern
+	if cached, exists := c.schemaCache[subject]; exists {
+		return cached, nil
+	}
+
+	schemaSubject, err := c.srClient.SchemaByVersion(context.Background(), subject, -1)
+	if err != nil {
+		return nil, fmt.Errorf("unable to get schema: %w", err)
+	}
+
 	avroSchema, err := avro.Parse(schemaSubject.Schema.Schema)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse avro schema: %w", err)
 	}
 
-	var serde sr.Serde
-	serde.Register(
-		schemaSubject.ID,
+	serde := &sr.Serde{}
+
+	cached = &SchemaCache{
+		Schema:     schemaSubject,
+		AvroSchema: avroSchema,
+		Serde:      serde,
+	}
+
+	c.schemaCache[subject] = cached
+	return cached, nil
+}
+
+// generateRecordKey generates a consistent key for the record based on content
+func generateRecordKey(data any) string {
+	hash := sha256.Sum256([]byte(fmt.Sprintf("%v", data)))
+	return fmt.Sprintf("%x", hash[:8]) // Use first 8 bytes as key
+}
+
+// SetRecord encodes the provided data using Avro and creates a Kafka record with the encoded value.
+func (c *KafkaClient) SetRecord(cfg *config.Config, ts any, topic string, schemaType any) (*kgo.Record, error) {
+	subject := topic + "-value"
+	
+	cached, err := c.getOrCreateSchemaCache(subject)
+	if err != nil {
+		return nil, err
+	}
+
+	cached.Serde.Register(
+		cached.Schema.ID,
 		schemaType,
-		sr.EncodeFn(func(v interface{}) ([]byte, error) {
-			return avro.Marshal(avroSchema, v)
+		sr.EncodeFn(func(v any) ([]byte, error) {
+			return avro.Marshal(cached.AvroSchema, v)
 		}),
-		sr.DecodeFn(func(b []byte, v interface{}) error {
-			return avro.Unmarshal(avroSchema, b, v)
+		sr.DecodeFn(func(b []byte, v any) error {
+			return avro.Unmarshal(cached.AvroSchema, b, v)
 		}),
 	)
-	tt := serde.MustEncode(ts)
+
+	encodedValue := cached.Serde.MustEncode(ts)
+	recordKey := generateRecordKey(ts)
+
 	record := kgo.Record{
-		Value: tt,
+		Key:   []byte(recordKey),
+		Value: encodedValue,
 		Topic: topic,
 	}
 	return &record, nil

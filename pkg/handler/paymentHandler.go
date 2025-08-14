@@ -13,11 +13,17 @@ import (
 
 func PaymentHandler(ctx context.Context, client *events.KafkaClient, cfg *config.Config) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		// Set request timeout
+		reqCtx, cancel := context.WithTimeout(ctx, 10*time.Second)
+		defer cancel()
+
 		var payment gen.Payment
 
 		if err := c.BodyParser(&payment); err != nil {
-			c.Status(http.StatusBadRequest)
-			return err
+			return c.Status(http.StatusBadRequest).JSON(ErrorResponse{
+				Error:   "invalid_request",
+				Message: "Failed to parse request body",
+			})
 		}
 
 		// Set the Timestamp field to current time if it's not already set
@@ -27,14 +33,22 @@ func PaymentHandler(ctx context.Context, client *events.KafkaClient, cfg *config
 
 		record, err := client.SetRecord(cfg, payment, "payment-topic", gen.Payment{})
 		if err != nil {
-			c.Status(http.StatusInternalServerError)
+			return c.Status(http.StatusInternalServerError).JSON(ErrorResponse{
+				Error:   "schema_error",
+				Message: "Failed to encode message",
+			})
 		}
 
-		err = client.Producer(ctx, record)
+		err = client.Producer(reqCtx, record)
 		if err != nil {
-			c.Status(http.StatusInternalServerError)
+			return c.Status(http.StatusInternalServerError).JSON(ErrorResponse{
+				Error:   "kafka_error",
+				Message: "Failed to produce message",
+			})
 		}
-		c.SendStatus(http.StatusOK) //nolint:errcheck
-		return c.Send([]byte("expense created successfully"))
+
+		return c.Status(http.StatusOK).JSON(SuccessResponse{
+			Message: "Payment created successfully",
+		})
 	}
 }

@@ -37,8 +37,5 @@ USER nonroot:nonroot
 
 EXPOSE 8083
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ["/app/server", "health"] || exit 1
-
 # Use ENTRYPOINT for fixed command
 ENTRYPOINT ["/app/server"]

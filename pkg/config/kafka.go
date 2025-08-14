@@ -13,7 +13,7 @@ import (
 type Config struct {
 	Brokers        string   `env:"BROKERS" envDefault:"localhost:9092"`
 	Topics         []string `env:"TOPICS" envDefault:"expense-topic,payment-topic,transaction-topic"`
-	SchemaRegistry string   `env:"SCHEMAREGISTRY" envDefault:"localhost:8081"`
+	SchemaRegistry string   `env:"SCHEMAREGISTRY" envDefault:"http://localhost:8081"`
 }
 
 // KafkaTLS represents the configuration for Kafka TLS settings.

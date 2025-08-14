@@ -1,6 +1,11 @@
-.PHONY: test
-test:
-	go test ./... -v --tags=integration -count=1 --json > test-report.json
+.PHONY: test test-unit test-integration
+test: test-unit test-integration
+
+test-unit:
+	go test -v -race -timeout=30s ./pkg/...
+
+test-integration:
+	go test -v -timeout=60s --tags=integration ./tests/integration/...
 
 .PHONY: build
 build:
@@ -13,6 +18,19 @@ clean:
 .PHONY: code-gen
 code-gen:
 	go generate ./...
+
+.PHONY: test-k6 run lint fmt schema-gen
+test-k6:
+	cd tests/performance && npm run test
+
+run:
+	go run ./cmd/main.go
+
+lint:
+	golangci-lint run
+
+fmt:
+	go fmt ./...
 
 .PHONY: schema-gen
 schema-gen:
