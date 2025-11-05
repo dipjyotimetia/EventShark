@@ -25,7 +25,7 @@ type Produce interface {
 // NewKafkaClient creates a new KafkaClient based on the provided configuration.
 // It initializes a Kafka producer client and returns a KafkaClient instance.
 func NewKafkaClient(cfg *config.Config) *KafkaClient {
-	seeds := []string{cfg.Brokers}
+	seeds := []string{cfg.Kafka.Brokers}
 	client, err := kgo.NewClient(
 		kgo.SeedBrokers(seeds...),
 	)
