@@ -1,0 +1,66 @@
+# EventShark Configuration Example
+# Copy this file to config.yaml and customize for your environment
+
+server:
+  port: 8083
+  read_timeout: 30s
+  write_timeout: 30s
+  idle_timeout: 5s
+
+kafka:
+  brokers: "localhost:9092"
+  topics:
+    - expense-topic
+    - payment-topic
+    - transaction-topic
+  request_timeout: 30s
+
+  # TLS Configuration (optional)
+  tls:
+    enabled: false
+    ca_filepath: ""
+    cert_filepath: ""
+    key_filepath: ""
+    insecure_skip_verify: false
+
+schema_registry: "localhost:8081"
+
+# Asynchronous Publishing
+async:
+  enabled: true
+  max_queue_size: 10000
+  worker_count: 10
+  job_timeout: 5m
+  cleanup_interval: 1h
+
+# Message Compression
+compression:
+  enabled: true
+  codec: "snappy"  # Options: none, gzip, snappy, lz4, zstd
+
+# Idempotency Support
+idempotency:
+  enabled: true
+  cache_ttl: 24h
+  max_entries: 100000
+
+# Circuit Breaker
+circuit_breaker:
+  enabled: true
+  max_requests: 3
+  interval: 60s
+  timeout: 30s
+  failure_threshold: 5
+
+# Dead Letter Queue
+dlq:
+  enabled: true
+  topic_suffix: "-dlq"
+  max_retries: 3
+
+# Serialization
+serialization:
+  default_format: "avro"  # Options: avro, json, protobuf
+  supported_formats:
+    - avro
+    - json

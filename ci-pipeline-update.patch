@@ -1,0 +1,169 @@
+diff --git a/.github/workflows/tests.yml b/.github/workflows/tests.yml
+index 0592b7d..de167ae 100644
+--- a/.github/workflows/tests.yml
++++ b/.github/workflows/tests.yml
+@@ -3,6 +3,8 @@ name: Tests
+ on:
+   pull_request:
+     branches: [ master ]
++  push:
++    branches: [ master ]
+ 
+ permissions:
+   pull-requests: write
+@@ -10,28 +12,141 @@ permissions:
+   issues: write
+ 
+ jobs:
+-  test:
+-    name: event-shark
++  unit-tests:
++    name: Unit Tests
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++
++      - uses: actions/setup-go@v5
++        with:
++          go-version-file: ./go.mod
++          cache: true
++
++      - name: Install dependencies
++        run: |
++          go mod download
++          go mod tidy
++
++      - name: Run unit tests
++        run: |
++          go test -v -race -coverprofile=coverage.out -covermode=atomic ./pkg/... -json > unit-test-report.json
++
++      - name: Upload coverage
++        uses: codecov/codecov-action@v3
++        with:
++          files: ./coverage.out
++          flags: unittests
++          name: unit-test-coverage
++        continue-on-error: true
++
++      - name: Generate Unit Test Report
++        if: always()
++        uses: dipjyotimetia/gotest-report@main
++        with:
++          test-json-file: unit-test-report.json
++          output-file: unit-test-report.md
++          comment-pr: false
++        continue-on-error: true
++
++  integration-tests:
++    name: Integration Tests
+     runs-on: ubuntu-latest
+     env:
+       DOCKER_BUILDKIT: 1
+     steps:
+       - uses: actions/checkout@v4
+-      - name: Setup Application
+-        run: docker compose up -d
++
+       - uses: actions/setup-go@v5
+         with:
+           go-version-file: ./go.mod
+-      - name: Run tests
+-        run: make test
+-      - name: Extract test results from container
++          cache: true
++
++      - name: Install dependencies
++        run: |
++          go mod download
++          go mod tidy
++
++      - name: Start Docker services
++        run: |
++          docker compose up -d
++          echo "Waiting for services to be ready..."
++          sleep 30
++
++      - name: Check service health
++        run: |
++          docker compose ps
++          curl -f http://localhost:8083/health || (docker compose logs && exit 1)
++
++      - name: Run integration tests
++        run: |
++          go test -v -tags=integration ./tests/integration/... -count=1 -json > integration-test-report.json
++
++      - name: Show service logs on failure
++        if: failure()
+         run: |
+-          ls -la ./test-report.json  # Verify file was extracted
+-      - name: Generate Test Report
++          docker compose logs
++
++      - name: Generate Integration Test Report
++        if: always()
+         uses: dipjyotimetia/gotest-report@main
+         with:
+-          test-json-file: test-report.json
+-          output-file: test-report.md
+-          comment-pr: true  
+-      - name: Compose down
+-        run: docker compose down --rmi all
++          test-json-file: integration-test-report.json
++          output-file: integration-test-report.md
++          comment-pr: true
++        continue-on-error: true
++
++      - name: Cleanup
++        if: always()
++        run: docker compose down --rmi all --volumes
++
++  lint:
++    name: Lint
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++
++      - uses: actions/setup-go@v5
++        with:
++          go-version-file: ./go.mod
++          cache: true
++
++      - name: Install dependencies
++        run: go mod download
++
++      - name: Run go vet
++        run: go vet ./...
++
++      - name: Run go fmt
++        run: |
++          if [ "$(gofmt -s -l . | wc -l)" -gt 0 ]; then
++            echo "The following files need formatting:"
++            gofmt -s -l .
++            exit 1
++          fi
++
++  build:
++    name: Build
++    runs-on: ubuntu-latest
++    steps:
++      - uses: actions/checkout@v4
++
++      - uses: actions/setup-go@v5
++        with:
++          go-version-file: ./go.mod
++          cache: true
++
++      - name: Install dependencies
++        run: go mod download
++
++      - name: Build application
++        run: go build -v ./cmd/main.go
++
++      - name: Build CLI
++        run: go build -v -o eventshark-cli ./cmd/cli/main.go
++
++      - name: Upload CLI artifact
++        uses: actions/upload-artifact@v3
++        with:
++          name: eventshark-cli
++          path: eventshark-cli
