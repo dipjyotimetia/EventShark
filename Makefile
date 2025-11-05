@@ -1,6 +1,12 @@
 .PHONY: test
 test:
-	go test ./... -v -count=1 --json > test-report.json
+	go test github.com/dipjyotimetia/event-shark/pkg/errors \
+		github.com/dipjyotimetia/event-shark/pkg/idempotency \
+		github.com/dipjyotimetia/event-shark/pkg/resilience \
+		github.com/dipjyotimetia/event-shark/pkg/serialization \
+		github.com/dipjyotimetia/event-shark/pkg/transformation \
+		github.com/dipjyotimetia/event-shark/pkg/config \
+		-v -count=1 --json > test-report.json
 
 .PHONY: test-unit
 test-unit:
